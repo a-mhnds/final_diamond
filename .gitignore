@@ -1,2 +1,5 @@
 archive/
 data/
+figures/
+__pycache__/
+out_files/
