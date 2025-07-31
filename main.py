@@ -8,26 +8,29 @@ analyzer = Analyzer()
 df = analyzer.read_dataset("data/diamonds.csv")
 df = analyzer.shuffle(df)
 df = analyzer.volume(df)
+# analyzer.plot_histograms_categorical(df, ['cut'])
 
 
 # Classification
-# refined_df, target = analyzer.refine_dataframe(df,['cut'])
+refined_df, target = analyzer.refine_dataframe(df,['cut'])
+print(refined_df)
 # from classifier import Classifier
 # cls = Classifier()
 # cls.train_test_val(refined_df,target, 0.8, 0.5)
 # y_predict, score = cls.estimator()
 
 
-# Regression
-refined_df, target = analyzer.refine_dataframe(df,['price'])
-from regressor import Regressor
-reg = Regressor()
-reg.train_test_val(refined_df,target, 0.8, 0.5)
-y_predict, score = reg.estimator(score_metric='r2')
+# # Regression
+# refined_df, target = analyzer.refine_dataframe(df,['price'])
+# from regressor import Regressor
+# reg = Regressor()
+# reg.train_test_val(refined_df,target, 0.8, 0.5)
+# y_predict, score = reg.estimator(score_metric='r2')
 
 
 # Clusterring
 # refined_df = analyzer.refine_dataframe(df)
+# print(refined_df)
 # from clustering import Cluster
 # cls = Cluster()
 # cls.train_test(refined_df, 0.8)

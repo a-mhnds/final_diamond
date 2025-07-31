@@ -56,12 +56,12 @@ class Analyzer:
         
         if target == ['price']:
             target = df[target]
-            print('df:', df.head(5))
+            # print('df:', df.head(5))
             df.drop(target, axis=1, inplace=True)
             target = target.values.ravel()
-        else:
+        elif target:
             target = df[target]
-            print('df:', df.head(5))
+            # print('df:', df.head(5))
             df.drop(target, axis=1, inplace=True)
             target = LabelEncoder().fit_transform(target.values.ravel())
 
