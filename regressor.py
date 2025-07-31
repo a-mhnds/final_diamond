@@ -1,3 +1,13 @@
+'''
+This scipt examines a set of regression models to determine the model with the best score.
+Hyperparameters are grid searched.
+Tables and plots of scores are stored in the out_files folder.
+
+Author: Ali Mohandesi
+Date: 30-07-2025
+'''
+
+
 import numpy as np
 import pandas as pd
 import os
@@ -20,6 +30,7 @@ from livelossplot import PlotLossesKeras
 from keras.callbacks import  CSVLogger
 import matplotlib.pyplot as plt
 
+# Lists of parameters for the GridSearch CV method
 param_grid_svr = {'C':np.linspace(0.8,1.2,4), 'kernel':['linear', 'poly', 'rbf', 'sigmoid'], 'gamma':['scale', 'auto']}
 param_grid_knn = {'n_neighbors':range(2,12)}
 param_grid_decisionTree = {'criterion':['squared_error', 'friedman_mse', 'absolute_error', 'poisson']}
@@ -38,8 +49,9 @@ class Regressor:
                   param_grid_decisionTree,
                   param_grid_svr,
                   param_grid_randomForest]
+        
 
-
+    # split the dataframe into train, test, and validation
     def train_test_val(self, X, y, TrainSize, ValSize):
         X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=TrainSize, random_state=42)
         X_test, X_val, y_test, y_val = train_test_split(X_test, y_test, test_size=ValSize, random_state=42)
@@ -49,31 +61,41 @@ class Regressor:
         self.y_train = y_train
         self.y_test = y_test
         self.y_val = y_val
- 
 
 
+    # estimate the best classifier model 
     def estimator(self, score_metric: Literal['r2', 'mse', 'mae', 'rmse'], *ann_args):
 
+        # create the out_files directory for storing generated figures and tables
         os.makedirs('out_files', exist_ok=True)
 
+        # default ANN hyperparameters
         if not ann_args:
-            ann_args = [10, 8,"adam", 'relu', 32, 10] #activation function should change - number of nodes should change.
+            ann_args = [10, 8,"adam", 'relu', 32, 10] 
 
         model = Sequential()
         i = 0
+
+        # add hidden layers
         while i<ann_args[0]:
             model.add(Dense(units=ann_args[1], activation=ann_args[3]))
             i += 1
 
-        model.add(Dense(1)) # activation function should be changed to the one for regression.
+        # add output layer
+        model.add(Dense(1)) 
         model.compile(optimizer=ann_args[2], loss='mean_squared_error', metrics=['mse', 'mae', tf.keras.metrics.R2Score()])
         
+        # create a log file from the loss and score at each epoch
         csvlogger = CSVLogger(filename='out_files/reg_cnn_metrics.csv', append=True)
+
+        # create loss and score plot
         plotlosses = PlotLossesKeras()
         history = model.fit(self.X_train, self.y_train, batch_size=ann_args[4], epochs=ann_args[5], validation_data=(self.X_val, self.y_val),
                             callbacks=[plotlosses, csvlogger], verbose=0)
         plt.savefig('out_files/reg_ann_metrics_plot.jpg')
         y_predict = model.predict(self.X_test)
+        
+        # calculate score based on the given score metric
         if score_metric=='r2':
             train_score = history.history['r2_score'][-1]
             val_score = history.history['_'.join(['val','r2_score'])][-1]
@@ -90,10 +112,13 @@ class Regressor:
         print('ANN scores: ', score)
 
 
+        # try all models to find the one with the best score
         print('model list:', self.model_name)
         model_rows = []
         for model in tqdm.tqdm(self.model_name):
             print('model: ', model)
+
+            # grid search for the best set of hyperparameters for each model
             grid=GridSearchCV(model, self.param_grid_lst[self.model_name.index(model)], verbose=0, refit = True)
             grid.fit(self.X_val, self.y_val)
             best_parameters = grid.best_params_
@@ -101,6 +126,8 @@ class Regressor:
 
             model_class = type(model)
 
+
+            # save best hyperparameters for the model
             json_file_path = "".join(['out_files/', model_class.__name__,'.json'])
             with open(json_file_path,'w') as f:
                 json.dump(best_parameters, f, indent=4)
@@ -120,6 +147,9 @@ class Regressor:
             row_data = {'model_name':model_class.__name__, ''.join(['score(',score_metric,')']):score}
             model_rows.append(row_data)
             print('model', score_metric, 'score: ', score)
+
+
+        # store list of models with their scores in a data from and save it in a CSV file
         model_results_df = pd.DataFrame(model_rows)
         model_results_df.to_csv('out_files/reg_model_scores.csv', index=False)
         return y_predict, score
