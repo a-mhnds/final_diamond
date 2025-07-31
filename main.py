@@ -11,7 +11,7 @@ df = analyzer.volume(df)
 
 
 # Classification
-# refined_df, target = analyzer.refine_dataframe(df,['price'])
+# refined_df, target = analyzer.refine_dataframe(df,['cut'])
 # from classifier import Classifier
 # cls = Classifier()
 # cls.train_test_val(refined_df,target, 0.8, 0.5)
@@ -19,10 +19,11 @@ df = analyzer.volume(df)
 
 
 # Regression
-# from regressor import Regressor
-# reg = Regressor()
-# reg.train_test_val(refined_df,target, 0.8, 0.5)
-# y_predict, score = reg.estimator(score_metric='r2')
+refined_df, target = analyzer.refine_dataframe(df,['price'])
+from regressor import Regressor
+reg = Regressor()
+reg.train_test_val(refined_df,target, 0.8, 0.5)
+y_predict, score = reg.estimator(score_metric='r2')
 
 
 # Clusterring

@@ -53,7 +53,13 @@ class Analyzer:
         import numpy as np
         
         
-        if target:
+        
+        if target == ['price']:
+            target = df[target]
+            print('df:', df.head(5))
+            df.drop(target, axis=1, inplace=True)
+            target = target.values.ravel()
+        else:
             target = df[target]
             print('df:', df.head(5))
             df.drop(target, axis=1, inplace=True)
